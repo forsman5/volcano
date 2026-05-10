@@ -16,6 +16,7 @@ var _is_moving: bool = false
 
 
 func _ready() -> void:
+	add_to_group("heroes")
 	motion_mode = CharacterBody2D.MOTION_MODE_FLOATING
 	if unit_texture:
 		_sprite.texture = unit_texture

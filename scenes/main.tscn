@@ -4,6 +4,9 @@
 [ext_resource type="PackedScene" uid="uid://bb86ydwglhp8t" path="res://scenes/player.tscn" id="2_sugp2"]
 [ext_resource type="Texture2D" path="res://assets/ally1.png" id="3_ally1"]
 [ext_resource type="Texture2D" uid="uid://b8qodpdf6mfgs" path="res://assets/ally2.png" id="4_ally2"]
+[ext_resource type="PackedScene" path="res://scenes/enemy.tscn" id="5_enemy_scene"]
+[ext_resource type="Texture2D" uid="uid://dwhdfiqkrtaed" path="res://assets/enemy1.png" id="6_enemy1"]
+[ext_resource type="Texture2D" uid="uid://ddmvhamlxrgtk" path="res://assets/enemy2.png" id="7_enemy2"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_top"]
 size = Vector2(1152, 32)
@@ -31,6 +34,14 @@ move_speed = 100.0
 position = Vector2(700, 400)
 unit_texture = ExtResource("4_ally2")
 move_speed = 120.0
+
+[node name="Enemy1" parent="." instance=ExtResource("5_enemy_scene")]
+position = Vector2(850, 200)
+unit_texture = ExtResource("6_enemy1")
+
+[node name="Enemy2" parent="." instance=ExtResource("5_enemy_scene")]
+position = Vector2(950, 480)
+unit_texture = ExtResource("7_enemy2")
 
 [node name="WallTop" type="StaticBody2D" parent="."]
 position = Vector2(576, 16)
