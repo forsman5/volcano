@@ -1,0 +1,46 @@
+class_name PlayerUnit
+extends CharacterBody2D
+
+signal clicked(unit: PlayerUnit)
+
+const MOVE_SPEED: float = 150.0
+const ARRIVAL_THRESHOLD: float = 4.0
+
+var _target_position: Vector2 = Vector2.ZERO
+var _is_moving: bool = false
+
+@onready var _area: Area2D = $Area2D
+@onready var _sprite: Sprite2D = $Sprite2D
+
+
+func _ready() -> void:
+	motion_mode = CharacterBody2D.MOTION_MODE_FLOATING
+	_area.input_event.connect(_on_area_input_event)
+
+
+func _physics_process(_delta: float) -> void:
+	if not _is_moving:
+		return
+	var direction := _target_position - global_position
+	if direction.length() <= ARRIVAL_THRESHOLD:
+		_is_moving = false
+		velocity = Vector2.ZERO
+	else:
+		velocity = direction.normalized() * MOVE_SPEED
+	move_and_slide()
+
+
+func move_to(pos: Vector2) -> void:
+	_target_position = pos
+	_is_moving = true
+
+
+func set_selected(selected: bool) -> void:
+	_sprite.modulate = Color(0.4, 1.0, 0.4) if selected else Color.WHITE
+
+
+func _on_area_input_event(_viewport: Node, event: InputEvent, _shape_idx: int) -> void:
+	if event is InputEventMouseButton:
+		var mb := event as InputEventMouseButton
+		if mb.button_index == MOUSE_BUTTON_LEFT and mb.pressed:
+			clicked.emit(self)
