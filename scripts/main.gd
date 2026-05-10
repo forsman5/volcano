@@ -50,7 +50,7 @@ func _spawn_units() -> void:
 	for i in range(GameConfig.ally_count):
 		var ally := UNIT_SCENE.instantiate() as PlayerUnit
 		ally.position = ally_positions[i]
-		ally.unit_texture = ALLY_TEXTURES[i % ALLY_TEXTURES.size()]
+		ally.unit_texture = _pick_texture("ally", i, ALLY_TEXTURES)
 		ally.move_speed = 120.0
 		ally.is_melee = true
 		ally.attack_range = 60.0
@@ -65,12 +65,19 @@ func _spawn_units() -> void:
 	for i in range(GameConfig.enemy_count):
 		var enemy := ENEMY_SCENE.instantiate() as EnemyUnit
 		enemy.position = enemy_positions[i]
-		enemy.unit_texture = ENEMY_TEXTURES[i % ENEMY_TEXTURES.size()]
+		enemy.unit_texture = _pick_texture("enemy", i, ENEMY_TEXTURES)
 		enemy.behavior = EnemyUnit.BehaviorType.RANGED_FLEEING if i == 1 else EnemyUnit.BehaviorType.MELEE_CHASER
 		enemy.died.connect(_on_enemy_died)
 		enemy.target_clicked.connect(_on_enemy_target_clicked)
 		add_child(enemy)
 		_enemy_units.append(enemy)
+
+
+func _pick_texture(prefix: String, index: int, fallbacks: Array) -> Texture2D:
+	var path := "res://assets/%s%d.png" % [prefix, index + 1]
+	if ResourceLoader.exists(path):
+		return load(path)
+	return fallbacks[index % fallbacks.size()]
 
 
 func _spread_positions(count: int, x: float) -> Array:
