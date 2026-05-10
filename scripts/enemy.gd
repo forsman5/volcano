@@ -1,6 +1,8 @@
 class_name EnemyUnit
 extends CharacterBody2D
 
+signal caught
+
 @export var move_speed: float = 160.0
 @export var unit_texture: Texture2D
 @export var alert_radius: float = 350.0
@@ -26,6 +28,7 @@ func _physics_process(_delta: float) -> void:
 	var dist := global_position.distance_to(nearest.global_position)
 
 	if dist <= catch_distance:
+		caught.emit()
 		queue_free()
 		return
 

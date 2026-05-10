@@ -1,0 +1,24 @@
+[gd_scene format=3 uid="uid://menu_scene"]
+
+[ext_resource type="Script" path="res://scripts/menu.gd" id="1_menu_gd"]
+
+[node name="Menu" type="Control"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("1_menu_gd")
+
+[node name="CenterContainer" type="CenterContainer" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer"]
+alignment = 1
+
+[node name="Title" type="Label" parent="CenterContainer/VBoxContainer"]
+text = "VOLCANO"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 72
+
+[node name="StartButton" type="Button" parent="CenterContainer/VBoxContainer"]
+text = "Start Game"
+theme_override_font_sizes/font_size = 24
