@@ -19,6 +19,7 @@ var _turn_phase := TurnPhase.PLANNING
 var _player_units: Array[PlayerUnit] = []
 var _enemy_units: Array[EnemyUnit] = []
 var _exec_frames: int = 0
+var _overlay: Node2D
 
 @onready var _end_turn_btn: Button = $HUDLayer/EndTurnButton
 @onready var _confirm_panel: CanvasLayer = $ConfirmPanel
@@ -28,6 +29,10 @@ var _exec_frames: int = 0
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_spawn_units()
+	_overlay = Node2D.new()
+	_overlay.z_index = 1
+	add_child(_overlay)
+	_overlay.draw.connect(_on_overlay_draw)
 	$PauseMenu/PanelCenter/VBoxContainer/ResumeButton.pressed.connect(_toggle_pause)
 	$PauseMenu/PanelCenter/VBoxContainer/MenuButton.pressed.connect(_go_to_menu)
 	$PauseMenu/PanelCenter/VBoxContainer/MenuSaveButton.pressed.connect(_go_to_menu_save)
@@ -68,7 +73,6 @@ func _spawn_units() -> void:
 		enemy.unit_texture = _pick_texture("enemy", i, ENEMY_TEXTURES)
 		enemy.behavior = EnemyUnit.BehaviorType.RANGED_FLEEING if i == 1 else EnemyUnit.BehaviorType.MELEE_CHASER
 		enemy.died.connect(_on_enemy_died)
-		enemy.target_clicked.connect(_on_enemy_target_clicked)
 		add_child(enemy)
 		_enemy_units.append(enemy)
 
@@ -101,19 +105,37 @@ func _physics_process(_delta: float) -> void:
 
 
 func _draw() -> void:
+	for child in get_children():
+		if child is StaticBody2D:
+			var cs := child.get_node_or_null("CollisionShape2D") as CollisionShape2D
+			if cs and cs.shape is RectangleShape2D:
+				var half := (cs.shape as RectangleShape2D).size / 2.0
+				draw_rect(Rect2(child.position - half, (cs.shape as RectangleShape2D).size), Color.BLACK)
+
+
+func _on_overlay_draw() -> void:
 	if _turn_phase != TurnPhase.PLANNING:
 		return
 	for unit in _player_units:
+		if not is_instance_valid(unit):
+			continue
 		if unit._has_pending_move:
-			draw_circle(unit._pending_move_target, 6.0, Color(0.3, 0.8, 1.0, 0.8))
-			draw_line(unit.global_position, unit._pending_move_target, Color(0.3, 0.8, 1.0, 0.4), 1.0)
+			_overlay.draw_circle(unit._pending_move_target, 6.0, Color(0.3, 0.8, 1.0, 0.8))
+			_overlay.draw_line(unit.global_position, unit._pending_move_target, Color(0.3, 0.8, 1.0, 0.5), 2.0)
 		if unit._has_pending_attack and is_instance_valid(unit._pending_attack_target):
-			draw_circle(unit._pending_attack_target.global_position, 8.0, Color(1.0, 0.2, 0.2, 0.9))
-			draw_line(unit.global_position, unit._pending_attack_target.global_position, Color(1.0, 0.2, 0.2, 0.5), 1.0)
-	if selected_unit != null:
+			_overlay.draw_circle(unit._pending_attack_target.global_position, 10.0, Color(1.0, 0.2, 0.2, 0.9))
+			_overlay.draw_line(unit.global_position, unit._pending_attack_target.global_position, Color(1.0, 0.2, 0.2, 0.7), 2.0)
+	if selected_unit != null and is_instance_valid(selected_unit):
 		var move_r := GameConfig.budget_ticks / 60.0 * selected_unit.move_speed
-		draw_arc(selected_unit.global_position, move_r, 0.0, TAU, 64, Color(1.0, 1.0, 1.0, 0.15), 1.0)
-		draw_arc(selected_unit.global_position, selected_unit.attack_range, 0.0, TAU, 64, Color(1.0, 0.2, 0.2, 0.25), 1.0)
+		_overlay.draw_arc(selected_unit.global_position, move_r, 0.0, TAU, 64, Color(1.0, 1.0, 1.0, 0.3), 2.0)
+		_overlay.draw_arc(selected_unit.global_position, selected_unit.attack_range, 0.0, TAU, 64, Color(1.0, 0.2, 0.2, 0.4), 2.0)
+
+
+func _enemy_at(pos: Vector2) -> EnemyUnit:
+	for enemy in _enemy_units:
+		if is_instance_valid(enemy) and pos.distance_to(enemy.global_position) <= 30.0:
+			return enemy
+	return null
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -128,14 +150,13 @@ func _unhandled_input(event: InputEvent) -> void:
 		var mb := event as InputEventMouseButton
 		if mb.button_index == MOUSE_BUTTON_RIGHT and mb.pressed:
 			if selected_unit != null and _turn_phase == TurnPhase.PLANNING:
-				selected_unit.set_pending_move(get_global_mouse_position())
-				queue_redraw()
-
-
-func _on_enemy_target_clicked(enemy: EnemyUnit) -> void:
-	if selected_unit != null and _turn_phase == TurnPhase.PLANNING:
-		selected_unit.set_pending_attack(enemy)
-		queue_redraw()
+				var mouse_pos := get_global_mouse_position()
+				var target_enemy := _enemy_at(mouse_pos)
+				if target_enemy != null:
+					selected_unit.set_pending_attack(target_enemy)
+				else:
+					selected_unit.set_pending_move(mouse_pos)
+				_overlay.queue_redraw()
 
 
 func _on_end_turn() -> void:
@@ -154,7 +175,7 @@ func _begin_execution() -> void:
 	_turn_phase = TurnPhase.EXECUTING
 	_exec_frames = 0
 	_end_turn_btn.disabled = true
-	queue_redraw()
+	_overlay.queue_redraw()
 
 	for unit in _player_units:
 		unit.begin_execution()
@@ -199,7 +220,7 @@ func _end_execution() -> void:
 	for enemy in _enemy_units:
 		if is_instance_valid(enemy):
 			enemy.end_execution()
-	queue_redraw()
+	_overlay.queue_redraw()
 
 
 func _show_confirm_panel(warnings: Array[String]) -> void:
@@ -237,7 +258,7 @@ func _on_unit_clicked(unit: PlayerUnit) -> void:
 		selected_unit.set_selected(false)
 	selected_unit = unit
 	selected_unit.set_selected(true)
-	queue_redraw()
+	_overlay.queue_redraw()
 
 
 func _on_enemy_died() -> void:

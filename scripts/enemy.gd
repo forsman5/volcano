@@ -1,8 +1,6 @@
 class_name EnemyUnit
 extends BaseUnit
 
-signal target_clicked(enemy: EnemyUnit)
-
 enum BehaviorType { MELEE_CHASER, RANGED_FLEEING }
 
 @export var behavior: BehaviorType = BehaviorType.MELEE_CHASER
@@ -11,7 +9,6 @@ enum BehaviorType { MELEE_CHASER, RANGED_FLEEING }
 var _is_executing: bool = false
 
 @onready var _sprite: Sprite2D = $Sprite2D
-@onready var _target_area: Area2D = $TargetArea
 
 
 func _ready() -> void:
@@ -23,7 +20,6 @@ func _ready() -> void:
 	super._ready()
 	if unit_texture:
 		_sprite.texture = unit_texture
-	_target_area.input_event.connect(_on_target_area_input)
 
 
 func _physics_process(_delta: float) -> void:
@@ -63,6 +59,8 @@ func begin_execution() -> void:
 
 func end_execution() -> void:
 	super.end_execution()
+	_has_pending_attack = false
+	_pending_attack_target = null
 	_is_executing = false
 
 
@@ -78,11 +76,3 @@ func _nearest_hero() -> Node2D:
 			nearest_dist = d
 			nearest = hero
 	return nearest
-
-
-func _on_target_area_input(_viewport: Node, event: InputEvent, _shape_idx: int) -> void:
-	if event is InputEventMouseButton:
-		var mb := event as InputEventMouseButton
-		if mb.button_index == MOUSE_BUTTON_RIGHT and mb.pressed:
-			target_clicked.emit(self)
-			get_viewport().set_input_as_handled()

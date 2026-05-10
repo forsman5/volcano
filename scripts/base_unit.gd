@@ -70,9 +70,10 @@ func begin_execution() -> void:
 
 func end_execution() -> void:
 	_has_pending_move = false
-	_has_pending_attack = false
 	_is_moving = false
 	velocity = Vector2.ZERO
+	if not is_instance_valid(_pending_attack_target):
+		_has_pending_attack = false
 
 
 func take_damage(amount: float) -> void:
