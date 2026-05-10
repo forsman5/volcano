@@ -26,3 +26,28 @@ To run the game without the editor:
     Godot_v4.6.2-stable_win64.exe volcano/project.godot
 
 Or press F5 inside the editor to launch from the main scene.
+
+WEB EXPORT & LOCAL SERVER
+--------------------------
+export_and_serve.ps1 exports a release web build and immediately starts a local
+HTTPS server so the game can be played in a browser, including from other devices
+on the same LAN.
+
+DEPENDENCIES
+Run this once to install the Python package needed for HTTPS support:
+
+    pip install cryptography
+
+ALLOW POWERSHELL SCRIPTS
+Run this once to allow local scripts to execute (Windows blocks them by default):
+
+    Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+
+USAGE
+From the project folder in PowerShell:
+
+    .\export_and_serve.ps1
+
+Once running, the script prints the URLs to use -- open the printed address in
+a browser. On first visit, the browser will warn about a self-signed certificate;
+click Advanced > Proceed to continue.
