@@ -14,6 +14,9 @@ var health: float = 100.0
 var _target_position: Vector2 = Vector2.ZERO
 var _is_moving: bool = false
 
+var _pending_target: Vector2 = Vector2.ZERO
+var _has_pending: bool = false
+
 @onready var _area: Area2D = $Area2D
 @onready var _sprite: Sprite2D = $Sprite2D
 
@@ -40,14 +43,37 @@ func _physics_process(_delta: float) -> void:
 	if direction.length() <= ARRIVAL_THRESHOLD:
 		_is_moving = false
 		velocity = Vector2.ZERO
-	else:
-		velocity = direction.normalized() * move_speed
+		move_and_slide()
+		return
+	velocity = direction.normalized() * move_speed
 	move_and_slide()
 
 
 func move_to(pos: Vector2) -> void:
 	_target_position = pos
 	_is_moving = true
+
+
+func set_pending_move(pos: Vector2) -> void:
+	_pending_target = pos
+	_has_pending = true
+
+
+func ready_for_end_turn() -> String:
+	if not _has_pending:
+		return "movement remaining"
+	return ""
+
+
+func begin_execution() -> void:
+	if _has_pending:
+		move_to(_pending_target)
+
+
+func end_execution() -> void:
+	_has_pending = false
+	_is_moving = false
+	velocity = Vector2.ZERO
 
 
 func set_selected(selected: bool) -> void:

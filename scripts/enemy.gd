@@ -11,6 +11,8 @@ signal caught
 
 var health: float = 80.0
 
+var _is_executing: bool = false
+
 @onready var _sprite: Sprite2D = $Sprite2D
 
 
@@ -28,6 +30,10 @@ func _ready() -> void:
 
 
 func _physics_process(_delta: float) -> void:
+	if not _is_executing:
+		velocity = Vector2.ZERO
+		return
+
 	var nearest := _nearest_hero()
 
 	if nearest == null:
@@ -48,6 +54,19 @@ func _physics_process(_delta: float) -> void:
 		velocity = Vector2.ZERO
 
 	move_and_slide()
+
+
+func ready_for_end_turn() -> String:
+	return ""
+
+
+func begin_execution() -> void:
+	_is_executing = true
+
+
+func end_execution() -> void:
+	_is_executing = false
+	velocity = Vector2.ZERO
 
 
 func _nearest_hero() -> Node2D:

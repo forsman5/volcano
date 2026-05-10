@@ -95,3 +95,54 @@ position = Vector2(1136, 324)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="WallRight"]
 shape = SubResource("RectangleShape2D_right")
+
+[node name="HUDLayer" type="CanvasLayer" parent="."]
+layer = 1
+
+[node name="EndTurnButton" type="Button" parent="HUDLayer"]
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -152
+offset_top = -52
+offset_right = -16
+offset_bottom = -16
+text = "End Turn"
+theme_override_font_sizes/font_size = 18
+
+[node name="ConfirmPanel" type="CanvasLayer" parent="."]
+layer = 2
+visible = false
+
+[node name="DimBg" type="ColorRect" parent="ConfirmPanel"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0, 0, 0, 0.6)
+
+[node name="PanelCenter" type="CenterContainer" parent="ConfirmPanel"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="Panel" type="PanelContainer" parent="ConfirmPanel/PanelCenter"]
+custom_minimum_size = Vector2(300, 0)
+
+[node name="VBox" type="VBoxContainer" parent="ConfirmPanel/PanelCenter/Panel"]
+theme_override_constants/separation = 16
+
+[node name="WarningLabel" type="Label" parent="ConfirmPanel/PanelCenter/Panel/VBox"]
+text = ""
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 20
+
+[node name="HBox" type="HBoxContainer" parent="ConfirmPanel/PanelCenter/Panel/VBox"]
+theme_override_constants/separation = 8
+alignment = 1
+
+[node name="ConfirmYes" type="Button" parent="ConfirmPanel/PanelCenter/Panel/VBox/HBox"]
+text = "End Turn Anyway"
+theme_override_font_sizes/font_size = 18
+
+[node name="ConfirmNo" type="Button" parent="ConfirmPanel/PanelCenter/Panel/VBox/HBox"]
+text = "Cancel"
+theme_override_font_sizes/font_size = 18
