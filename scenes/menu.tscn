@@ -12,6 +12,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 
 [node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer"]
+theme_override_constants/separation = 16
 alignment = 1
 
 [node name="Title" type="Label" parent="CenterContainer/VBoxContainer"]
@@ -22,3 +23,65 @@ theme_override_font_sizes/font_size = 72
 [node name="StartButton" type="Button" parent="CenterContainer/VBoxContainer"]
 text = "Start Game"
 theme_override_font_sizes/font_size = 24
+
+[node name="CustomButton" type="Button" parent="CenterContainer/VBoxContainer"]
+text = "Start Game (Custom)"
+theme_override_font_sizes/font_size = 24
+
+[node name="ConfigOverlay" type="Control" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+visible = false
+
+[node name="DimBg" type="ColorRect" parent="ConfigOverlay"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0, 0, 0, 0.6)
+
+[node name="PanelCenter" type="CenterContainer" parent="ConfigOverlay"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="Panel" type="PanelContainer" parent="ConfigOverlay/PanelCenter"]
+custom_minimum_size = Vector2(320, 0)
+
+[node name="Content" type="VBoxContainer" parent="ConfigOverlay/PanelCenter/Panel"]
+theme_override_constants/separation = 16
+
+[node name="ConfigTitle" type="Label" parent="ConfigOverlay/PanelCenter/Panel/Content"]
+text = "Custom Setup"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 32
+
+[node name="AllyRow" type="HBoxContainer" parent="ConfigOverlay/PanelCenter/Panel/Content"]
+
+[node name="AllyLabel" type="Label" parent="ConfigOverlay/PanelCenter/Panel/Content/AllyRow"]
+text = "Allies:"
+size_flags_horizontal = 3
+
+[node name="AllySpinBox" type="SpinBox" parent="ConfigOverlay/PanelCenter/Panel/Content/AllyRow"]
+max_value = 5.0
+value = 2.0
+
+[node name="EnemyRow" type="HBoxContainer" parent="ConfigOverlay/PanelCenter/Panel/Content"]
+
+[node name="EnemyLabel" type="Label" parent="ConfigOverlay/PanelCenter/Panel/Content/EnemyRow"]
+text = "Enemies:"
+size_flags_horizontal = 3
+
+[node name="EnemySpinBox" type="SpinBox" parent="ConfigOverlay/PanelCenter/Panel/Content/EnemyRow"]
+min_value = 1.0
+max_value = 6.0
+value = 2.0
+
+[node name="Buttons" type="HBoxContainer" parent="ConfigOverlay/PanelCenter/Panel/Content"]
+theme_override_constants/separation = 8
+alignment = 1
+
+[node name="StartButton" type="Button" parent="ConfigOverlay/PanelCenter/Panel/Content/Buttons"]
+text = "Start"
+theme_override_font_sizes/font_size = 20
+
+[node name="CancelButton" type="Button" parent="ConfigOverlay/PanelCenter/Panel/Content/Buttons"]
+text = "Cancel"
+theme_override_font_sizes/font_size = 20
