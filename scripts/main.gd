@@ -26,6 +26,7 @@ var _exec_frames: int = 0
 
 
 func _ready() -> void:
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	_spawn_units()
 	$PauseMenu/PanelCenter/VBoxContainer/ResumeButton.pressed.connect(_toggle_pause)
 	$PauseMenu/PanelCenter/VBoxContainer/MenuButton.pressed.connect(_go_to_menu)
@@ -76,7 +77,7 @@ func _spread_positions(count: int, x: float) -> Array:
 
 
 func _physics_process(_delta: float) -> void:
-	if _turn_phase != TurnPhase.EXECUTING:
+	if _turn_phase != TurnPhase.EXECUTING or get_tree().paused:
 		return
 	_exec_frames += 1
 	if _exec_frames >= GameConfig.budget_ticks:
