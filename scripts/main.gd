@@ -98,7 +98,10 @@ func _draw() -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey:
 		if event.keycode == KEY_ESCAPE and event.pressed:
-			_toggle_pause()
+			if _confirm_panel.visible:
+				_on_confirm_no()
+			else:
+				_toggle_pause()
 			return
 	if event is InputEventMouseButton:
 		var mb := event as InputEventMouseButton
