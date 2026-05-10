@@ -2,11 +2,11 @@ extends Node2D
 
 var selected_unit: PlayerUnit = null
 
-@onready var _player: PlayerUnit = $PlayerUnit
-
 
 func _ready() -> void:
-	_player.clicked.connect(_on_unit_clicked)
+	for child in get_children():
+		if child is PlayerUnit:
+			child.clicked.connect(_on_unit_clicked)
 
 
 func _unhandled_input(event: InputEvent) -> void:

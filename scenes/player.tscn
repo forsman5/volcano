@@ -6,6 +6,9 @@
 [sub_resource type="CircleShape2D" id="CircleShape2D_dqkch"]
 radius = 25.0
 
+[sub_resource type="CircleShape2D" id="CircleShape2D_body"]
+radius = 25.0
+
 [node name="Player" type="CharacterBody2D" unique_id=737055500]
 position = Vector2(300, 400)
 script = ExtResource("1_g2els")
@@ -18,3 +21,6 @@ texture = ExtResource("2_qhqgy")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D" unique_id=1147623951]
 shape = SubResource("CircleShape2D_dqkch")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1147623952]
+shape = SubResource("CircleShape2D_body")

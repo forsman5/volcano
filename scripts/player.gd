@@ -3,7 +3,9 @@ extends CharacterBody2D
 
 signal clicked(unit: PlayerUnit)
 
-const MOVE_SPEED: float = 150.0
+@export var move_speed: float = 150.0
+@export var unit_texture: Texture2D
+
 const ARRIVAL_THRESHOLD: float = 4.0
 
 var _target_position: Vector2 = Vector2.ZERO
@@ -15,6 +17,8 @@ var _is_moving: bool = false
 
 func _ready() -> void:
 	motion_mode = CharacterBody2D.MOTION_MODE_FLOATING
+	if unit_texture:
+		_sprite.texture = unit_texture
 	_area.input_event.connect(_on_area_input_event)
 
 
@@ -26,7 +30,7 @@ func _physics_process(_delta: float) -> void:
 		_is_moving = false
 		velocity = Vector2.ZERO
 	else:
-		velocity = direction.normalized() * MOVE_SPEED
+		velocity = direction.normalized() * move_speed
 	move_and_slide()
 
 
