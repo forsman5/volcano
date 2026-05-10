@@ -4,6 +4,7 @@ extends Node2D
 var target_unit: Node2D
 var damage: float = 25.0
 var speed: float = 500.0
+var heals: bool = false
 
 
 func _ready() -> void:
@@ -11,7 +12,7 @@ func _ready() -> void:
 
 
 func _draw() -> void:
-	draw_circle(Vector2.ZERO, 4.0, Color.RED)
+	draw_circle(Vector2.ZERO, 4.0, Color.GREEN if heals else Color.RED)
 
 
 func _process(delta: float) -> void:
@@ -32,7 +33,10 @@ func _process(delta: float) -> void:
 
 	var dir := target_pos - global_position
 	if dir.length() <= speed * delta:
-		target_unit.take_damage(damage)
+		if heals:
+			target_unit.heal(damage)
+		else:
+			target_unit.take_damage(damage)
 		queue_free()
 		return
 

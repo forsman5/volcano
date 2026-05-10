@@ -83,17 +83,6 @@ size_flags_horizontal = 3
 [node name="HealthBarsCheck" type="CheckBox" parent="ConfigOverlay/PanelCenter/Panel/Content/HealthBarsRow"]
 button_pressed = true
 
-[node name="SpeedRow" type="HBoxContainer" parent="ConfigOverlay/PanelCenter/Panel/Content"]
-
-[node name="SpeedLabel" type="Label" parent="ConfigOverlay/PanelCenter/Panel/Content/SpeedRow"]
-text = "Speed Multiplier:"
-size_flags_horizontal = 3
-
-[node name="SpeedSpinBox" type="SpinBox" parent="ConfigOverlay/PanelCenter/Panel/Content/SpeedRow"]
-min_value = 0.5
-max_value = 3.0
-step = 0.1
-value = 1.0
 
 [node name="CombatTextRow" type="HBoxContainer" parent="ConfigOverlay/PanelCenter/Panel/Content"]
 

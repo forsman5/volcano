@@ -51,6 +51,7 @@ func _spawn_units() -> void:
 	player.is_melee = pw["is_melee"]
 	player.attack_range = pw["attack_range"]
 	player.attack_damage = pw["attack_damage"]
+	player.heals = pw["heals"]
 	player.clicked.connect(_on_unit_clicked)
 	player.died.connect(func(): _player_units.erase(player))
 	add_child(player)
@@ -61,11 +62,11 @@ func _spawn_units() -> void:
 		var ally := UNIT_SCENE.instantiate() as PlayerUnit
 		ally.position = ally_positions[i]
 		ally.unit_texture = _pick_texture("ally", i, ALLY_TEXTURES)
-		ally.move_speed = 120.0
 		var aw: Dictionary = WeaponData.WEAPONS[GameConfig.unit_weapons[i + 1]]
 		ally.is_melee = aw["is_melee"]
 		ally.attack_range = aw["attack_range"]
 		ally.attack_damage = aw["attack_damage"]
+		ally.heals = aw["heals"]
 		ally.clicked.connect(_on_unit_clicked)
 		ally.died.connect(func(): _player_units.erase(ally))
 		add_child(ally)
@@ -125,22 +126,24 @@ func _on_overlay_draw() -> void:
 	for unit in _player_units:
 		if not is_instance_valid(unit):
 			continue
-		if unit._has_pending_move:
-			_overlay.draw_circle(unit._pending_move_target, 6.0, Color(0.3, 0.8, 1.0, 0.8))
-			_overlay.draw_line(unit.global_position, unit._pending_move_target, Color(0.3, 0.8, 1.0, 0.5), 2.0)
 		if unit._has_pending_attack and is_instance_valid(unit._pending_attack_target):
-			_overlay.draw_circle(unit._pending_attack_target.global_position, 10.0, Color(1.0, 0.2, 0.2, 0.9))
-			_overlay.draw_line(unit.global_position, unit._pending_attack_target.global_position, Color(1.0, 0.2, 0.2, 0.7), 2.0)
-	if selected_unit != null and is_instance_valid(selected_unit):
-		var move_r := GameConfig.budget_ticks / 60.0 * selected_unit.move_speed
-		_overlay.draw_arc(selected_unit.global_position, move_r, 0.0, TAU, 64, Color(1.0, 1.0, 1.0, 0.3), 2.0)
-		_overlay.draw_arc(selected_unit.global_position, selected_unit.attack_range, 0.0, TAU, 64, Color(1.0, 0.2, 0.2, 0.4), 2.0)
+			var col := Color(0.2, 1.0, 0.3, 0.9) if unit.heals else Color(1.0, 0.2, 0.2, 0.9)
+			var line_col := Color(0.2, 1.0, 0.3, 0.7) if unit.heals else Color(1.0, 0.2, 0.2, 0.7)
+			_overlay.draw_circle(unit._pending_attack_target.global_position, 10.0, col)
+			_overlay.draw_line(unit.global_position, unit._pending_attack_target.global_position, line_col, 2.0)
 
 
 func _enemy_at(pos: Vector2) -> EnemyUnit:
 	for enemy in _enemy_units:
 		if is_instance_valid(enemy) and pos.distance_to(enemy.global_position) <= 30.0:
 			return enemy
+	return null
+
+
+func _ally_at(pos: Vector2) -> PlayerUnit:
+	for unit in _player_units:
+		if is_instance_valid(unit) and unit != selected_unit and pos.distance_to(unit.global_position) <= 30.0:
+			return unit
 	return null
 
 
@@ -157,12 +160,16 @@ func _unhandled_input(event: InputEvent) -> void:
 		if mb.button_index == MOUSE_BUTTON_RIGHT and mb.pressed:
 			if selected_unit != null and _turn_phase == TurnPhase.PLANNING:
 				var mouse_pos := get_global_mouse_position()
-				var target_enemy := _enemy_at(mouse_pos)
-				if target_enemy != null:
-					selected_unit.set_pending_attack(target_enemy)
+				if selected_unit.heals:
+					var target_ally := _ally_at(mouse_pos)
+					if target_ally != null:
+						selected_unit.set_pending_attack(target_ally)
+						_overlay.queue_redraw()
 				else:
-					selected_unit.set_pending_move(mouse_pos)
-				_overlay.queue_redraw()
+					var target_enemy := _enemy_at(mouse_pos)
+					if target_enemy != null:
+						selected_unit.set_pending_attack(target_enemy)
+						_overlay.queue_redraw()
 
 
 func _on_end_turn() -> void:
@@ -190,6 +197,7 @@ func _begin_execution() -> void:
 			proj.global_position = unit.global_position
 			proj.target_unit = unit._pending_attack_target
 			proj.damage = unit.attack_damage
+			proj.heals = unit.heals
 			add_child(proj)
 
 	for enemy in _enemy_units:

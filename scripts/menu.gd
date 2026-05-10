@@ -4,7 +4,6 @@ extends Control
 @onready var _ally_spin: SpinBox = $ConfigOverlay/PanelCenter/Panel/Content/AllyRow/AllySpinBox
 @onready var _enemy_spin: SpinBox = $ConfigOverlay/PanelCenter/Panel/Content/EnemyRow/EnemySpinBox
 @onready var _health_bars_check: CheckBox = $ConfigOverlay/PanelCenter/Panel/Content/HealthBarsRow/HealthBarsCheck
-@onready var _speed_spin: SpinBox = $ConfigOverlay/PanelCenter/Panel/Content/SpeedRow/SpeedSpinBox
 @onready var _combat_text_check: CheckBox = $ConfigOverlay/PanelCenter/Panel/Content/CombatTextRow/CombatTextCheck
 
 # Maps GameConfig field name → [control_node, control_property].
@@ -19,10 +18,9 @@ func _ready() -> void:
 	$ConfigOverlay/PanelCenter/Panel/Content/Buttons/StartButton.pressed.connect(_on_config_start)
 	$ConfigOverlay/PanelCenter/Panel/Content/Buttons/CancelButton.pressed.connect(_on_config_cancel)
 	_field_map = {
-		"ally_count":       [_ally_spin,        "value"],
-		"enemy_count":      [_enemy_spin,        "value"],
+		"ally_count":       [_ally_spin,          "value"],
+		"enemy_count":      [_enemy_spin,          "value"],
 		"show_health_bars": [_health_bars_check,   "button_pressed"],
-		"speed_multiplier": [_speed_spin,          "value"],
 		"show_combat_text": [_combat_text_check,   "button_pressed"],
 	}
 	_sync_ui_from_config()

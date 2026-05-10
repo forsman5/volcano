@@ -8,7 +8,6 @@ const USER_FIELDS: Array[String] = [
 	"ally_count",
 	"enemy_count",
 	"show_health_bars",
-	"speed_multiplier",
 	"show_combat_text",
 ]
 
@@ -16,14 +15,12 @@ const DEFAULTS := {
 	"ally_count": 2,
 	"enemy_count": 2,
 	"show_health_bars": true,
-	"speed_multiplier": 1.0,
 	"show_combat_text": true,
 }
 
 var ally_count: int = 2
 var enemy_count: int = 2
 var show_health_bars: bool = true
-var speed_multiplier: float = 1.0
 var show_combat_text: bool = true
 var budget_ticks: int = 120
 var unit_weapons: Array[int] = []
@@ -37,6 +34,7 @@ func save() -> void:
 	var cfg := ConfigFile.new()
 	for key in USER_FIELDS:
 		cfg.set_value("custom", key, get(key))
+	cfg.set_value("custom", "unit_weapons", unit_weapons)
 	cfg.save(SAVE_PATH)
 
 
@@ -46,6 +44,7 @@ func load_config() -> void:
 		return
 	for key in USER_FIELDS:
 		set(key, cfg.get_value("custom", key, get(key)))
+	unit_weapons = Array(cfg.get_value("custom", "unit_weapons", []), TYPE_INT, "", null)
 
 
 func reset_to_defaults() -> void:
@@ -54,6 +53,8 @@ func reset_to_defaults() -> void:
 
 
 func reset_unit_weapons() -> void:
-	unit_weapons.clear()
-	for i in range(ally_count + 1):
+	var needed := ally_count + 1
+	while unit_weapons.size() < needed:
 		unit_weapons.append(0)
+	while unit_weapons.size() > needed:
+		unit_weapons.pop_back()
