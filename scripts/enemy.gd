@@ -1,72 +1,69 @@
 class_name EnemyUnit
-extends CharacterBody2D
+extends BaseUnit
 
-signal caught
+signal target_clicked(enemy: EnemyUnit)
 
-@export var move_speed: float = 160.0
-@export var unit_texture: Texture2D
+enum BehaviorType { MELEE_CHASER, RANGED_FLEEING }
+
+@export var behavior: BehaviorType = BehaviorType.MELEE_CHASER
 @export var alert_radius: float = 350.0
-@export var catch_distance: float = 60.0
-@export var max_health: float = 80.0
-
-var health: float = 80.0
 
 var _is_executing: bool = false
 
 @onready var _sprite: Sprite2D = $Sprite2D
+@onready var _target_area: Area2D = $TargetArea
 
 
 func _ready() -> void:
-	motion_mode = CharacterBody2D.MOTION_MODE_FLOATING
-	health = max_health
-	move_speed *= GameConfig.speed_multiplier
+	max_health = 80.0
+	move_speed = 160.0
+	is_melee = (behavior == BehaviorType.MELEE_CHASER)
+	attack_range = 60.0 if is_melee else 350.0
+	attack_damage = 20.0
+	super._ready()
 	if unit_texture:
 		_sprite.texture = unit_texture
-	if GameConfig.show_health_bars:
-		var bar := HealthBar.new()
-		bar.position = Vector2(0.0, -35.0)
-		add_child(bar)
-		bar.setup(health, max_health)
+	_target_area.input_event.connect(_on_target_area_input)
 
 
 func _physics_process(_delta: float) -> void:
 	if not _is_executing:
 		velocity = Vector2.ZERO
 		return
+	match behavior:
+		BehaviorType.MELEE_CHASER:
+			_move_step()
+		BehaviorType.RANGED_FLEEING:
+			_flee_step()
 
+
+func _flee_step() -> void:
 	var nearest := _nearest_hero()
-
 	if nearest == null:
 		velocity = Vector2.ZERO
 		move_and_slide()
 		return
-
 	var dist := global_position.distance_to(nearest.global_position)
-
-	if dist <= catch_distance:
-		caught.emit()
-		queue_free()
-		return
-
 	if dist <= alert_radius:
 		velocity = (global_position - nearest.global_position).normalized() * move_speed
 	else:
 		velocity = Vector2.ZERO
-
 	move_and_slide()
-
-
-func ready_for_end_turn() -> String:
-	return ""
 
 
 func begin_execution() -> void:
 	_is_executing = true
+	var nearest := _nearest_hero()
+	if nearest == null:
+		return
+	set_pending_attack(nearest)
+	if behavior == BehaviorType.MELEE_CHASER:
+		move_to(nearest.global_position)
 
 
 func end_execution() -> void:
+	super.end_execution()
 	_is_executing = false
-	velocity = Vector2.ZERO
 
 
 func _nearest_hero() -> Node2D:
@@ -74,8 +71,18 @@ func _nearest_hero() -> Node2D:
 	var nearest: Node2D = null
 	var nearest_dist := INF
 	for hero in heroes:
-		var d: float = global_position.distance_to(hero.global_position)
+		if not is_instance_valid(hero):
+			continue
+		var d := global_position.distance_to(hero.global_position)
 		if d < nearest_dist:
 			nearest_dist = d
 			nearest = hero
 	return nearest
+
+
+func _on_target_area_input(_viewport: Node, event: InputEvent, _shape_idx: int) -> void:
+	if event is InputEventMouseButton:
+		var mb := event as InputEventMouseButton
+		if mb.button_index == MOUSE_BUTTON_RIGHT and mb.pressed:
+			target_clicked.emit(self)
+			get_viewport().set_input_as_handled()

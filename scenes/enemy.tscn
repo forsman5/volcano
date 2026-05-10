@@ -5,6 +5,9 @@
 [sub_resource type="CircleShape2D" id="CircleShape2D_enemy"]
 radius = 25.0
 
+[sub_resource type="CircleShape2D" id="CircleShape2D_target"]
+radius = 25.0
+
 [node name="Enemy" type="CharacterBody2D"]
 script = ExtResource("1_enemy_gd")
 
@@ -13,3 +16,8 @@ scale = Vector2(0.1, 0.1)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("CircleShape2D_enemy")
+
+[node name="TargetArea" type="Area2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="TargetArea"]
+shape = SubResource("CircleShape2D_target")

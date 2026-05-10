@@ -39,7 +39,10 @@ func _ready() -> void:
 func _spawn_units() -> void:
 	var player := UNIT_SCENE.instantiate() as PlayerUnit
 	player.position = Vector2(200, 324)
+	player.attack_range = 350.0
+	player.attack_damage = 25.0
 	player.clicked.connect(_on_unit_clicked)
+	player.died.connect(func(): _player_units.erase(player))
 	add_child(player)
 	_player_units.append(player)
 
@@ -49,7 +52,11 @@ func _spawn_units() -> void:
 		ally.position = ally_positions[i]
 		ally.unit_texture = ALLY_TEXTURES[i % ALLY_TEXTURES.size()]
 		ally.move_speed = 120.0
+		ally.is_melee = true
+		ally.attack_range = 60.0
+		ally.attack_damage = 30.0
 		ally.clicked.connect(_on_unit_clicked)
+		ally.died.connect(func(): _player_units.erase(ally))
 		add_child(ally)
 		_player_units.append(ally)
 
@@ -59,7 +66,9 @@ func _spawn_units() -> void:
 		var enemy := ENEMY_SCENE.instantiate() as EnemyUnit
 		enemy.position = enemy_positions[i]
 		enemy.unit_texture = ENEMY_TEXTURES[i % ENEMY_TEXTURES.size()]
-		enemy.caught.connect(_on_enemy_caught)
+		enemy.behavior = EnemyUnit.BehaviorType.RANGED_FLEEING if i == 1 else EnemyUnit.BehaviorType.MELEE_CHASER
+		enemy.died.connect(_on_enemy_died)
+		enemy.target_clicked.connect(_on_enemy_target_clicked)
 		add_child(enemy)
 		_enemy_units.append(enemy)
 
@@ -88,12 +97,16 @@ func _draw() -> void:
 	if _turn_phase != TurnPhase.PLANNING:
 		return
 	for unit in _player_units:
-		if unit._has_pending:
-			draw_circle(unit._pending_target, 6.0, Color(0.3, 0.8, 1.0, 0.8))
-			draw_line(unit.global_position, unit._pending_target, Color(0.3, 0.8, 1.0, 0.4), 1.0)
+		if unit._has_pending_move:
+			draw_circle(unit._pending_move_target, 6.0, Color(0.3, 0.8, 1.0, 0.8))
+			draw_line(unit.global_position, unit._pending_move_target, Color(0.3, 0.8, 1.0, 0.4), 1.0)
+		if unit._has_pending_attack and is_instance_valid(unit._pending_attack_target):
+			draw_circle(unit._pending_attack_target.global_position, 8.0, Color(1.0, 0.2, 0.2, 0.9))
+			draw_line(unit.global_position, unit._pending_attack_target.global_position, Color(1.0, 0.2, 0.2, 0.5), 1.0)
 	if selected_unit != null:
-		var budget_radius := GameConfig.budget_ticks / 60.0 * selected_unit.move_speed
-		draw_arc(selected_unit.global_position, budget_radius, 0.0, TAU, 64, Color(1.0, 1.0, 1.0, 0.15), 1.0)
+		var move_r := GameConfig.budget_ticks / 60.0 * selected_unit.move_speed
+		draw_arc(selected_unit.global_position, move_r, 0.0, TAU, 64, Color(1.0, 1.0, 1.0, 0.15), 1.0)
+		draw_arc(selected_unit.global_position, selected_unit.attack_range, 0.0, TAU, 64, Color(1.0, 0.2, 0.2, 0.25), 1.0)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -112,12 +125,18 @@ func _unhandled_input(event: InputEvent) -> void:
 				queue_redraw()
 
 
+func _on_enemy_target_clicked(enemy: EnemyUnit) -> void:
+	if selected_unit != null and _turn_phase == TurnPhase.PLANNING:
+		selected_unit.set_pending_attack(enemy)
+		queue_redraw()
+
+
 func _on_end_turn() -> void:
 	var warnings: Array[String] = []
 	for unit in _player_units:
-		var w := unit.ready_for_end_turn()
-		if w != "" and w not in warnings:
-			warnings.append(w)
+		for w in unit.ready_for_end_turn():
+			if w not in warnings:
+				warnings.append(w)
 	if warnings.is_empty():
 		_begin_execution()
 	else:
@@ -129,14 +148,43 @@ func _begin_execution() -> void:
 	_exec_frames = 0
 	_end_turn_btn.disabled = true
 	queue_redraw()
+
 	for unit in _player_units:
 		unit.begin_execution()
+		if not unit.is_melee and unit._has_pending_attack and is_instance_valid(unit._pending_attack_target):
+			var proj := Projectile.new()
+			proj.global_position = unit.global_position
+			proj.target_unit = unit._pending_attack_target
+			proj.damage = unit.attack_damage
+			add_child(proj)
+
 	for enemy in _enemy_units:
-		if is_instance_valid(enemy):
-			enemy.begin_execution()
+		if not is_instance_valid(enemy):
+			continue
+		enemy.begin_execution()
+		if not enemy.is_melee and enemy._has_pending_attack and is_instance_valid(enemy._pending_attack_target):
+			var proj := Projectile.new()
+			proj.global_position = enemy.global_position
+			proj.target_unit = enemy._pending_attack_target
+			proj.damage = enemy.attack_damage
+			add_child(proj)
 
 
 func _end_execution() -> void:
+	for unit in _player_units:
+		if unit.is_melee and unit._has_pending_attack:
+			var t := unit._pending_attack_target
+			if is_instance_valid(t) and unit.global_position.distance_to(t.global_position) <= unit.attack_range:
+				t.take_damage(unit.attack_damage)
+
+	for enemy in _enemy_units:
+		if not is_instance_valid(enemy):
+			continue
+		if enemy.is_melee and enemy._has_pending_attack:
+			var t := enemy._pending_attack_target
+			if is_instance_valid(t) and enemy.global_position.distance_to(t.global_position) <= enemy.attack_range:
+				t.take_damage(enemy.attack_damage)
+
 	_turn_phase = TurnPhase.PLANNING
 	_end_turn_btn.disabled = false
 	for unit in _player_units:
@@ -185,7 +233,7 @@ func _on_unit_clicked(unit: PlayerUnit) -> void:
 	queue_redraw()
 
 
-func _on_enemy_caught() -> void:
+func _on_enemy_died() -> void:
 	_enemies_remaining -= 1
 	if _enemies_remaining == 0:
 		$WinScreen.visible = true
