@@ -7,14 +7,24 @@ signal caught
 @export var unit_texture: Texture2D
 @export var alert_radius: float = 350.0
 @export var catch_distance: float = 60.0
+@export var max_health: float = 80.0
+
+var health: float = 80.0
 
 @onready var _sprite: Sprite2D = $Sprite2D
 
 
 func _ready() -> void:
 	motion_mode = CharacterBody2D.MOTION_MODE_FLOATING
+	health = max_health
+	move_speed *= GameConfig.speed_multiplier
 	if unit_texture:
 		_sprite.texture = unit_texture
+	if GameConfig.show_health_bars:
+		var bar := HealthBar.new()
+		bar.position = Vector2(0.0, -35.0)
+		add_child(bar)
+		bar.setup(health, max_health)
 
 
 func _physics_process(_delta: float) -> void:

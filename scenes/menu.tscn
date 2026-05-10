@@ -36,7 +36,7 @@ visible = false
 [node name="DimBg" type="ColorRect" parent="ConfigOverlay"]
 anchor_right = 1.0
 anchor_bottom = 1.0
-color = Color(0, 0, 0, 0.6)
+color = Color(0, 0, 0, 0.92)
 
 [node name="PanelCenter" type="CenterContainer" parent="ConfigOverlay"]
 anchor_right = 1.0
@@ -73,6 +73,27 @@ size_flags_horizontal = 3
 min_value = 1.0
 max_value = 6.0
 value = 2.0
+
+[node name="HealthBarsRow" type="HBoxContainer" parent="ConfigOverlay/PanelCenter/Panel/Content"]
+
+[node name="HealthBarsLabel" type="Label" parent="ConfigOverlay/PanelCenter/Panel/Content/HealthBarsRow"]
+text = "Show Health Bars:"
+size_flags_horizontal = 3
+
+[node name="HealthBarsCheck" type="CheckBox" parent="ConfigOverlay/PanelCenter/Panel/Content/HealthBarsRow"]
+button_pressed = true
+
+[node name="SpeedRow" type="HBoxContainer" parent="ConfigOverlay/PanelCenter/Panel/Content"]
+
+[node name="SpeedLabel" type="Label" parent="ConfigOverlay/PanelCenter/Panel/Content/SpeedRow"]
+text = "Speed Multiplier:"
+size_flags_horizontal = 3
+
+[node name="SpeedSpinBox" type="SpinBox" parent="ConfigOverlay/PanelCenter/Panel/Content/SpeedRow"]
+min_value = 0.5
+max_value = 3.0
+step = 0.1
+value = 1.0
 
 [node name="Buttons" type="HBoxContainer" parent="ConfigOverlay/PanelCenter/Panel/Content"]
 theme_override_constants/separation = 8

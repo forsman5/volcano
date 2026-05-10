@@ -5,8 +5,11 @@ signal clicked(unit: PlayerUnit)
 
 @export var move_speed: float = 150.0
 @export var unit_texture: Texture2D
+@export var max_health: float = 100.0
 
 const ARRIVAL_THRESHOLD: float = 4.0
+
+var health: float = 100.0
 
 var _target_position: Vector2 = Vector2.ZERO
 var _is_moving: bool = false
@@ -17,10 +20,17 @@ var _is_moving: bool = false
 
 func _ready() -> void:
 	add_to_group("heroes")
+	health = max_health
+	move_speed *= GameConfig.speed_multiplier
 	motion_mode = CharacterBody2D.MOTION_MODE_FLOATING
 	if unit_texture:
 		_sprite.texture = unit_texture
 	_area.input_event.connect(_on_area_input_event)
+	if GameConfig.show_health_bars:
+		var bar := HealthBar.new()
+		bar.position = Vector2(0.0, -35.0)
+		add_child(bar)
+		bar.setup(health, max_health)
 
 
 func _physics_process(_delta: float) -> void:
