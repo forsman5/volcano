@@ -56,5 +56,4 @@ func _on_config_cancel() -> void:
 
 func _on_config_start() -> void:
 	_sync_config_from_ui()
-	GameConfig.save()
 	get_tree().change_scene_to_file("res://scenes/main.tscn")

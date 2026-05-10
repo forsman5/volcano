@@ -29,6 +29,7 @@ func _ready() -> void:
 	_spawn_units()
 	$PauseMenu/PanelCenter/VBoxContainer/ResumeButton.pressed.connect(_toggle_pause)
 	$PauseMenu/PanelCenter/VBoxContainer/MenuButton.pressed.connect(_go_to_menu)
+	$PauseMenu/PanelCenter/VBoxContainer/MenuSaveButton.pressed.connect(_go_to_menu_save)
 	_end_turn_btn.pressed.connect(_on_end_turn)
 	$ConfirmPanel/PanelCenter/Panel/VBox/HBox/ConfirmYes.pressed.connect(_on_confirm_yes)
 	$ConfirmPanel/PanelCenter/Panel/VBox/HBox/ConfirmNo.pressed.connect(_on_confirm_no)
@@ -166,6 +167,12 @@ func _go_to_menu() -> void:
 	get_tree().change_scene_to_file("res://scenes/menu.tscn")
 
 
+func _go_to_menu_save() -> void:
+	GameConfig.save()
+	get_tree().paused = false
+	get_tree().change_scene_to_file("res://scenes/menu.tscn")
+
+
 func _on_unit_clicked(unit: PlayerUnit) -> void:
 	if selected_unit != null and selected_unit != unit:
 		selected_unit.set_selected(false)
@@ -178,6 +185,5 @@ func _on_enemy_caught() -> void:
 	_enemies_remaining -= 1
 	if _enemies_remaining == 0:
 		$WinScreen.visible = true
-		$WinScreen/CenterContainer/VBoxContainer/MenuButton.pressed.connect(
-			func(): get_tree().change_scene_to_file("res://scenes/menu.tscn")
-		)
+		$WinScreen/CenterContainer/VBoxContainer/MenuButton.pressed.connect(_go_to_menu)
+		$WinScreen/CenterContainer/VBoxContainer/MenuSaveButton.pressed.connect(_go_to_menu_save)

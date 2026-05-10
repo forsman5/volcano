@@ -42,6 +42,10 @@ theme_override_font_sizes/font_size = 72
 text = "Return to Menu"
 theme_override_font_sizes/font_size = 24
 
+[node name="MenuSaveButton" type="Button" parent="WinScreen/CenterContainer/VBoxContainer"]
+text = "Return to Menu + Save Settings"
+theme_override_font_sizes/font_size = 24
+
 [node name="PauseMenu" type="CanvasLayer" parent="."]
 visible = false
 process_mode = 3
@@ -70,6 +74,10 @@ theme_override_font_sizes/font_size = 24
 
 [node name="MenuButton" type="Button" parent="PauseMenu/PanelCenter/VBoxContainer"]
 text = "Back to Main Menu"
+theme_override_font_sizes/font_size = 24
+
+[node name="MenuSaveButton" type="Button" parent="PauseMenu/PanelCenter/VBoxContainer"]
+text = "Back to Menu + Save Settings"
 theme_override_font_sizes/font_size = 24
 
 [node name="WallTop" type="StaticBody2D" parent="."]
