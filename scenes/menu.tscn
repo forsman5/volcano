@@ -99,6 +99,10 @@ value = 1.0
 theme_override_constants/separation = 8
 alignment = 1
 
+[node name="ResetButton" type="Button" parent="ConfigOverlay/PanelCenter/Panel/Content/Buttons"]
+text = "Reset to Default"
+theme_override_font_sizes/font_size = 20
+
 [node name="StartButton" type="Button" parent="ConfigOverlay/PanelCenter/Panel/Content/Buttons"]
 text = "Start"
 theme_override_font_sizes/font_size = 20
