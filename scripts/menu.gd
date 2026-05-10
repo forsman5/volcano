@@ -40,6 +40,7 @@ func _sync_config_from_ui() -> void:
 
 
 func _on_start_default() -> void:
+	GameConfig.reset_unit_weapons()
 	get_tree().change_scene_to_file("res://scenes/main.tscn")
 
 
@@ -58,4 +59,5 @@ func _on_config_cancel() -> void:
 
 func _on_config_start() -> void:
 	_sync_config_from_ui()
-	get_tree().change_scene_to_file("res://scenes/main.tscn")
+	GameConfig.reset_unit_weapons()
+	get_tree().change_scene_to_file("res://scenes/inventory.tscn")

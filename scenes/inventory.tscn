@@ -1,0 +1,48 @@
+[gd_scene format=3 uid="uid://inventory_sc"]
+
+[ext_resource type="Script" path="res://scripts/inventory.gd" id="1_inv_gd"]
+
+[node name="InventoryScreen" type="Control"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("1_inv_gd")
+
+[node name="Background" type="ColorRect" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.12, 0.12, 0.15, 1.0)
+
+[node name="CenterContainer" type="CenterContainer" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="Panel" type="PanelContainer" parent="CenterContainer"]
+custom_minimum_size = Vector2(420, 0)
+
+[node name="MarginContainer" type="MarginContainer" parent="CenterContainer/Panel"]
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_top = 24
+theme_override_constants/margin_bottom = 24
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer/Panel/MarginContainer"]
+theme_override_constants/separation = 16
+
+[node name="Title" type="Label" parent="CenterContainer/Panel/MarginContainer/VBoxContainer"]
+text = "Loadout"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 28
+
+[node name="UnitList" type="VBoxContainer" parent="CenterContainer/Panel/MarginContainer/VBoxContainer"]
+theme_override_constants/separation = 8
+
+[node name="HBoxContainer" type="HBoxContainer" parent="CenterContainer/Panel/MarginContainer/VBoxContainer"]
+theme_override_constants/separation = 12
+
+[node name="BackButton" type="Button" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/HBoxContainer"]
+size_flags_horizontal = 3
+text = "Back"
+
+[node name="StartButton" type="Button" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/HBoxContainer"]
+size_flags_horizontal = 3
+text = "Start Game"

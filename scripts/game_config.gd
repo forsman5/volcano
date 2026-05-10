@@ -26,6 +26,7 @@ var show_health_bars: bool = true
 var speed_multiplier: float = 1.0
 var show_combat_text: bool = true
 var budget_ticks: int = 120
+var unit_weapons: Array[int] = []
 
 
 func _ready() -> void:
@@ -50,3 +51,9 @@ func load_config() -> void:
 func reset_to_defaults() -> void:
 	for key in DEFAULTS:
 		set(key, DEFAULTS[key])
+
+
+func reset_unit_weapons() -> void:
+	unit_weapons.clear()
+	for i in range(ally_count + 1):
+		unit_weapons.append(0)

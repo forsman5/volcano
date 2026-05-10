@@ -42,10 +42,15 @@ func _ready() -> void:
 
 
 func _spawn_units() -> void:
+	if GameConfig.unit_weapons.is_empty():
+		GameConfig.reset_unit_weapons()
+
 	var player := UNIT_SCENE.instantiate() as PlayerUnit
 	player.position = Vector2(200, 324)
-	player.attack_range = 350.0
-	player.attack_damage = 25.0
+	var pw: Dictionary = WeaponData.WEAPONS[GameConfig.unit_weapons[0]]
+	player.is_melee = pw["is_melee"]
+	player.attack_range = pw["attack_range"]
+	player.attack_damage = pw["attack_damage"]
 	player.clicked.connect(_on_unit_clicked)
 	player.died.connect(func(): _player_units.erase(player))
 	add_child(player)
@@ -57,9 +62,10 @@ func _spawn_units() -> void:
 		ally.position = ally_positions[i]
 		ally.unit_texture = _pick_texture("ally", i, ALLY_TEXTURES)
 		ally.move_speed = 120.0
-		ally.is_melee = true
-		ally.attack_range = 60.0
-		ally.attack_damage = 30.0
+		var aw: Dictionary = WeaponData.WEAPONS[GameConfig.unit_weapons[i + 1]]
+		ally.is_melee = aw["is_melee"]
+		ally.attack_range = aw["attack_range"]
+		ally.attack_damage = aw["attack_damage"]
 		ally.clicked.connect(_on_unit_clicked)
 		ally.died.connect(func(): _player_units.erase(ally))
 		add_child(ally)
