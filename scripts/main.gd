@@ -199,20 +199,6 @@ func _begin_execution() -> void:
 
 
 func _end_execution() -> void:
-	for unit in _player_units:
-		if unit.is_melee and unit._has_pending_attack:
-			var t := unit._pending_attack_target
-			if is_instance_valid(t) and unit.global_position.distance_to(t.global_position) <= unit.attack_range:
-				t.take_damage(unit.attack_damage)
-
-	for enemy in _enemy_units:
-		if not is_instance_valid(enemy):
-			continue
-		if enemy.is_melee and enemy._has_pending_attack:
-			var t := enemy._pending_attack_target
-			if is_instance_valid(t) and enemy.global_position.distance_to(t.global_position) <= enemy.attack_range:
-				t.take_damage(enemy.attack_damage)
-
 	_turn_phase = TurnPhase.PLANNING
 	_end_turn_btn.disabled = false
 	for unit in _player_units:

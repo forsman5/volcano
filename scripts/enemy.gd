@@ -6,8 +6,6 @@ enum BehaviorType { MELEE_CHASER, RANGED_FLEEING }
 @export var behavior: BehaviorType = BehaviorType.MELEE_CHASER
 @export var alert_radius: float = 350.0
 
-var _is_executing: bool = false
-
 @onready var _sprite: Sprite2D = $Sprite2D
 
 
@@ -29,6 +27,7 @@ func _physics_process(_delta: float) -> void:
 	match behavior:
 		BehaviorType.MELEE_CHASER:
 			_move_step()
+			_try_melee_attack()
 		BehaviorType.RANGED_FLEEING:
 			_flee_step()
 
