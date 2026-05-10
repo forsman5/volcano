@@ -82,6 +82,11 @@ func take_damage(amount: float) -> void:
 	health -= amount
 	if _health_bar:
 		_health_bar.setup(health, max_health)
+	if GameConfig.show_combat_text:
+		var dmg_label := DamageLabel.new()
+		get_parent().add_child(dmg_label)
+		dmg_label.global_position = global_position + Vector2(0, -20)
+		dmg_label.setup(amount)
 	if health <= 0.0:
 		_is_dead = true
 		die()
