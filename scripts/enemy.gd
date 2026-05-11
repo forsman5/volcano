@@ -3,9 +3,12 @@ extends BaseUnit
 
 enum BehaviorType { MELEE_CHASER, RANGED_FLEEING }
 
+signal clicked(enemy: EnemyUnit)
+
 @export var behavior: BehaviorType = BehaviorType.MELEE_CHASER
 
 @onready var _sprite: Sprite2D = $Sprite2D
+@onready var _area: Area2D = $Area2D
 
 
 func _ready() -> void:
@@ -16,13 +19,22 @@ func _ready() -> void:
 	super._ready()
 	if unit_texture:
 		_sprite.texture = unit_texture
+	_area.input_event.connect(_on_area_input_event)
 
 
-func begin_execution() -> void:
+func set_selected(selected: bool) -> void:
+	_sprite.modulate = Color(1.0, 0.5, 0.5) if selected else Color.WHITE
+
+
+func pick_target() -> void:
 	var nearest := _nearest_hero()
 	if nearest == null:
 		return
 	set_pending_attack(nearest)
+
+
+func begin_execution() -> void:
+	super.begin_execution()
 
 
 func end_execution() -> void:
@@ -43,3 +55,12 @@ func _nearest_hero() -> Node2D:
 			nearest_dist = d
 			nearest = hero
 	return nearest
+
+
+func _on_area_input_event(_viewport: Node, event: InputEvent, _shape_idx: int) -> void:
+	if not GameConfig.show_enemy_pending:
+		return
+	if event is InputEventMouseButton:
+		var mb := event as InputEventMouseButton
+		if mb.button_index == MOUSE_BUTTON_LEFT and mb.pressed:
+			clicked.emit(self)

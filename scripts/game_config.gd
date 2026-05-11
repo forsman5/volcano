@@ -9,6 +9,7 @@ const USER_FIELDS: Array[String] = [
 	"enemy_count",
 	"show_health_bars",
 	"show_combat_text",
+	"show_enemy_pending",
 ]
 
 const DEFAULTS := {
@@ -16,12 +17,14 @@ const DEFAULTS := {
 	"enemy_count": 2,
 	"show_health_bars": true,
 	"show_combat_text": true,
+	"show_enemy_pending": true,
 }
 
 var ally_count: int = 2
 var enemy_count: int = 2
 var show_health_bars: bool = true
 var show_combat_text: bool = true
+var show_enemy_pending: bool = true
 var unit_weapons: Array[int] = []
 
 

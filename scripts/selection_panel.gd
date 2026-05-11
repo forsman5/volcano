@@ -13,14 +13,14 @@ signal action_selected(index: int)
 @onready var _action_buttons: VBoxContainer = $Margin/HBox/ActionButtons
 
 var _button_group: ButtonGroup
-var _displayed_unit: PlayerUnit = null
+var _displayed_unit: BaseUnit = null
 
 
 func _ready() -> void:
 	_button_group = ButtonGroup.new()
 
 
-func refresh(unit: PlayerUnit) -> void:
+func refresh(unit: BaseUnit) -> void:
 	if unit == null or not is_instance_valid(unit):
 		visible = false
 		_displayed_unit = null
@@ -47,7 +47,7 @@ func refresh(unit: PlayerUnit) -> void:
 		_rebuild_action_buttons(unit)
 
 
-func _rebuild_action_buttons(unit: PlayerUnit) -> void:
+func _rebuild_action_buttons(unit: BaseUnit) -> void:
 	for child in _action_buttons.get_children():
 		child.queue_free()
 	for i in unit.actions.size():

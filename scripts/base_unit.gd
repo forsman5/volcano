@@ -36,6 +36,10 @@ func _ready() -> void:
 		_health_bar.setup(health, max_health)
 
 
+func set_selected(_selected: bool) -> void:
+	pass
+
+
 func set_pending_attack(target: Node2D) -> void:
 	_pending_defend = false
 	_defend_bonus = 0.0

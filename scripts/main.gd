@@ -13,7 +13,7 @@ const ENEMY_TEXTURES = [
 	preload("res://assets/enemy2.png"),
 ]
 
-var selected_unit: PlayerUnit = null
+var selected_unit: BaseUnit = null
 var _enemies_remaining: int = 0
 var _player_units: Array[PlayerUnit] = []
 var _enemy_units: Array[EnemyUnit] = []
@@ -97,8 +97,17 @@ func _spawn_units() -> void:
 		enemy.unit_name = "Enemy %d" % (i + 1)
 		enemy.behavior = EnemyUnit.BehaviorType.RANGED_FLEEING if i == 1 else EnemyUnit.BehaviorType.MELEE_CHASER
 		enemy.died.connect(_on_enemy_died)
+		enemy.died.connect(func():
+			if selected_unit == enemy:
+				selected_unit = null
+				_update_selection_panel()
+		)
+		enemy.clicked.connect(_on_unit_clicked)
 		add_child(enemy)
 		_enemy_units.append(enemy)
+
+	for enemy in _enemy_units:
+		enemy.pick_target()
 
 
 func _pick_texture(prefix: String, index: int, fallbacks: Array) -> Texture2D:
@@ -138,6 +147,13 @@ func _on_overlay_draw() -> void:
 			var line_col := Color(0.2, 1.0, 0.3, 0.7) if unit.heals else Color(1.0, 0.2, 0.2, 0.7)
 			_overlay.draw_circle(unit._pending_attack_target.global_position, 10.0, col)
 			_overlay.draw_line(unit.global_position, unit._pending_attack_target.global_position, line_col, 2.0)
+	if GameConfig.show_enemy_pending:
+		for enemy in _enemy_units:
+			if not is_instance_valid(enemy):
+				continue
+			if enemy._has_pending_attack and is_instance_valid(enemy._pending_attack_target):
+				_overlay.draw_circle(enemy._pending_attack_target.global_position, 10.0, Color(1.0, 0.5, 0.0, 0.9))
+				_overlay.draw_line(enemy.global_position, enemy._pending_attack_target.global_position, Color(1.0, 0.5, 0.0, 0.7), 2.0)
 
 
 func _enemy_at(pos: Vector2) -> EnemyUnit:
@@ -165,7 +181,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
 		var mb := event as InputEventMouseButton
 		if mb.button_index == MOUSE_BUTTON_RIGHT and mb.pressed:
-			if selected_unit != null:
+			if selected_unit != null and selected_unit is PlayerUnit:
 				var action_idx := _active_action_index if _active_action_index >= 0 else 0
 				var current_action: ActionDef = null
 				if selected_unit.actions.size() > action_idx:
@@ -245,6 +261,7 @@ func _end_execution() -> void:
 	for enemy in _enemy_units:
 		if is_instance_valid(enemy):
 			enemy.end_execution()
+			enemy.pick_target()
 	_overlay.queue_redraw()
 	_update_selection_panel()
 
@@ -279,7 +296,7 @@ func _go_to_menu_save() -> void:
 	get_tree().change_scene_to_file("res://scenes/menu.tscn")
 
 
-func _on_unit_clicked(unit: PlayerUnit) -> void:
+func _on_unit_clicked(unit: BaseUnit) -> void:
 	if selected_unit != null and selected_unit != unit:
 		selected_unit.set_selected(false)
 		_reset_action_state()
