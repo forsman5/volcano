@@ -26,6 +26,7 @@ var show_health_bars: bool = true
 var show_combat_text: bool = true
 var show_enemy_pending: bool = true
 var unit_weapons: Array[int] = []
+var unit_classes: Array[int] = []
 
 
 func _ready() -> void:
@@ -37,6 +38,7 @@ func save() -> void:
 	for key in USER_FIELDS:
 		cfg.set_value("custom", key, get(key))
 	cfg.set_value("custom", "unit_weapons", unit_weapons)
+	cfg.set_value("custom", "unit_classes", unit_classes)
 	cfg.save(SAVE_PATH)
 
 
@@ -47,11 +49,20 @@ func load_config() -> void:
 	for key in USER_FIELDS:
 		set(key, cfg.get_value("custom", key, get(key)))
 	unit_weapons = Array(cfg.get_value("custom", "unit_weapons", []), TYPE_INT, "", null)
+	unit_classes = Array(cfg.get_value("custom", "unit_classes", []), TYPE_INT, "", null)
 
 
 func reset_to_defaults() -> void:
 	for key in DEFAULTS:
 		set(key, DEFAULTS[key])
+
+
+func reset_unit_classes() -> void:
+	var needed := ally_count + 1
+	while unit_classes.size() < needed:
+		unit_classes.append(0)
+	while unit_classes.size() > needed:
+		unit_classes.pop_back()
 
 
 func reset_unit_weapons() -> void:
