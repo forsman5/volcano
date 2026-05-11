@@ -2,6 +2,8 @@ extends Node2D
 
 const UNIT_SCENE := preload("res://scenes/player.tscn")
 const ENEMY_SCENE := preload("res://scenes/enemy.tscn")
+const PLAYER_TEXTURE := preload("res://assets/player.png")
+const SELECTION_PANEL_SCENE := preload("res://scenes/selection_panel.tscn")
 const ALLY_TEXTURES = [
 	preload("res://assets/ally1.png"),
 	preload("res://assets/ally2.png"),
@@ -21,6 +23,8 @@ var _enemy_units: Array[EnemyUnit] = []
 var _exec_frames: int = 0
 var _overlay: Node2D
 
+var _sel_panel: SelectionPanel
+
 @onready var _end_turn_btn: Button = $HUDLayer/EndTurnButton
 @onready var _confirm_panel: CanvasLayer = $ConfirmPanel
 @onready var _confirm_label: Label = $ConfirmPanel/PanelCenter/Panel/VBox/WarningLabel
@@ -33,6 +37,8 @@ func _ready() -> void:
 	_overlay.z_index = 1
 	add_child(_overlay)
 	_overlay.draw.connect(_on_overlay_draw)
+	_sel_panel = SELECTION_PANEL_SCENE.instantiate()
+	$HUDLayer.add_child(_sel_panel)
 	$PauseMenu/PanelCenter/VBoxContainer/ResumeButton.pressed.connect(_toggle_pause)
 	$PauseMenu/PanelCenter/VBoxContainer/MenuButton.pressed.connect(_go_to_menu)
 	$PauseMenu/PanelCenter/VBoxContainer/MenuSaveButton.pressed.connect(_go_to_menu_save)
@@ -47,6 +53,8 @@ func _spawn_units() -> void:
 
 	var player := UNIT_SCENE.instantiate() as PlayerUnit
 	player.position = Vector2(200, 324)
+	player.unit_texture = PLAYER_TEXTURE
+	player.unit_name = "Player"
 	var pw: Dictionary = WeaponData.WEAPONS[GameConfig.unit_weapons[0]]
 	player.is_melee = pw["is_melee"]
 	player.attack_range = pw["attack_range"]
@@ -62,6 +70,7 @@ func _spawn_units() -> void:
 		var ally := UNIT_SCENE.instantiate() as PlayerUnit
 		ally.position = ally_positions[i]
 		ally.unit_texture = _pick_texture("ally", i, ALLY_TEXTURES)
+		ally.unit_name = "Ally %d" % (i + 1)
 		var aw: Dictionary = WeaponData.WEAPONS[GameConfig.unit_weapons[i + 1]]
 		ally.is_melee = aw["is_melee"]
 		ally.attack_range = aw["attack_range"]
@@ -78,6 +87,7 @@ func _spawn_units() -> void:
 		var enemy := ENEMY_SCENE.instantiate() as EnemyUnit
 		enemy.position = enemy_positions[i]
 		enemy.unit_texture = _pick_texture("enemy", i, ENEMY_TEXTURES)
+		enemy.unit_name = "Enemy %d" % (i + 1)
 		enemy.behavior = EnemyUnit.BehaviorType.RANGED_FLEEING if i == 1 else EnemyUnit.BehaviorType.MELEE_CHASER
 		enemy.died.connect(_on_enemy_died)
 		add_child(enemy)
@@ -165,11 +175,13 @@ func _unhandled_input(event: InputEvent) -> void:
 					if target_ally != null:
 						selected_unit.set_pending_attack(target_ally)
 						_overlay.queue_redraw()
+						_update_selection_panel()
 				else:
 					var target_enemy := _enemy_at(mouse_pos)
 					if target_enemy != null:
 						selected_unit.set_pending_attack(target_enemy)
 						_overlay.queue_redraw()
+						_update_selection_panel()
 
 
 func _on_end_turn() -> void:
@@ -189,6 +201,7 @@ func _begin_execution() -> void:
 	_exec_frames = 0
 	_end_turn_btn.disabled = true
 	_overlay.queue_redraw()
+	_update_selection_panel()
 
 	for unit in _player_units:
 		unit.begin_execution()
@@ -221,6 +234,7 @@ func _end_execution() -> void:
 		if is_instance_valid(enemy):
 			enemy.end_execution()
 	_overlay.queue_redraw()
+	_update_selection_panel()
 
 
 func _show_confirm_panel(warnings: Array[String]) -> void:
@@ -259,6 +273,7 @@ func _on_unit_clicked(unit: PlayerUnit) -> void:
 	selected_unit = unit
 	selected_unit.set_selected(true)
 	_overlay.queue_redraw()
+	_update_selection_panel()
 
 
 func _on_enemy_died() -> void:
@@ -267,3 +282,7 @@ func _on_enemy_died() -> void:
 		$WinScreen.visible = true
 		$WinScreen/CenterContainer/VBoxContainer/MenuButton.pressed.connect(_go_to_menu)
 		$WinScreen/CenterContainer/VBoxContainer/MenuSaveButton.pressed.connect(_go_to_menu_save)
+
+
+func _update_selection_panel() -> void:
+	_sel_panel.refresh(selected_unit)

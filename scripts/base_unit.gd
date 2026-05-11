@@ -13,6 +13,7 @@ var health: float
 var _is_dead: bool = false
 
 var heals: bool = false
+var unit_name: String = ""
 
 var _pending_attack_target: Node2D = null
 var _has_pending_attack: bool = false
