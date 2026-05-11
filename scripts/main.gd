@@ -55,12 +55,18 @@ func _spawn_units() -> void:
 	var defend := ActionDef.new()
 	defend.name = "Defend"
 	defend.targeting = ActionDef.TargetType.SELF
+	defend.effect = ActionDef.Effect.DEFEND
+
+	var taunt := ActionDef.new()
+	taunt.name = "Taunt"
+	taunt.targeting = ActionDef.TargetType.TARGETED_ENEMY
+	taunt.effect = ActionDef.Effect.TAUNT
 
 	var player := UNIT_SCENE.instantiate() as PlayerUnit
 	player.position = Vector2(200, 324)
 	player.unit_texture = PLAYER_TEXTURE
 	player.unit_name = "Player"
-	player.actions = [use_weapon, defend]
+	player.actions = _build_unit_actions(GameConfig.unit_classes[0] if GameConfig.unit_classes.size() > 0 else 0, use_weapon, taunt, defend)
 	var pw: Dictionary = WeaponData.WEAPONS[GameConfig.unit_weapons[0]]
 	player.is_melee = pw["is_melee"]
 	player.attack_range = pw["attack_range"]
@@ -77,7 +83,8 @@ func _spawn_units() -> void:
 		ally.position = ally_positions[i]
 		ally.unit_texture = _pick_texture("ally", i, ALLY_TEXTURES)
 		ally.unit_name = "Ally %d" % (i + 1)
-		ally.actions = [use_weapon, defend]
+		var class_id := GameConfig.unit_classes[i + 1] if (i + 1) < GameConfig.unit_classes.size() else 0
+		ally.actions = _build_unit_actions(class_id, use_weapon, taunt, defend)
 		var aw: Dictionary = WeaponData.WEAPONS[GameConfig.unit_weapons[i + 1]]
 		ally.is_melee = aw["is_melee"]
 		ally.attack_range = aw["attack_range"]
@@ -110,6 +117,12 @@ func _spawn_units() -> void:
 		enemy.pick_target()
 
 
+func _build_unit_actions(class_id: int, use_weapon: ActionDef, taunt: ActionDef, defend: ActionDef) -> Array[ActionDef]:
+	if class_id == 0:  # Tank
+		return [use_weapon, taunt, defend]
+	return [use_weapon, defend]
+
+
 func _pick_texture(prefix: String, index: int, fallbacks: Array) -> Texture2D:
 	var path := "res://assets/%s%d.png" % [prefix, index + 1]
 	if ResourceLoader.exists(path):
@@ -139,12 +152,24 @@ func _draw() -> void:
 
 
 func _on_overlay_draw() -> void:
+	for enemy in _enemy_units:
+		if is_instance_valid(enemy) and enemy.has_status(StatusEffect.StatusType.TAUNT):
+			_overlay.draw_circle(enemy.global_position, 18.0, Color(1.0, 0.85, 0.0, 0.5))
 	for unit in _player_units:
 		if not is_instance_valid(unit):
 			continue
 		if unit._has_pending_attack and is_instance_valid(unit._pending_attack_target):
-			var col := Color(0.2, 1.0, 0.3, 0.9) if unit.heals else Color(1.0, 0.2, 0.2, 0.9)
-			var line_col := Color(0.2, 1.0, 0.3, 0.7) if unit.heals else Color(1.0, 0.2, 0.2, 0.7)
+			var col: Color
+			var line_col: Color
+			if unit._pending_taunt:
+				col = Color(1.0, 0.85, 0.0, 0.9)
+				line_col = Color(1.0, 0.85, 0.0, 0.7)
+			elif unit.heals:
+				col = Color(0.2, 1.0, 0.3, 0.9)
+				line_col = Color(0.2, 1.0, 0.3, 0.7)
+			else:
+				col = Color(1.0, 0.2, 0.2, 0.9)
+				line_col = Color(1.0, 0.2, 0.2, 0.7)
 			_overlay.draw_circle(unit._pending_attack_target.global_position, 10.0, col)
 			_overlay.draw_line(unit.global_position, unit._pending_attack_target.global_position, line_col, 2.0)
 	if GameConfig.show_enemy_pending:
@@ -188,22 +213,26 @@ func _unhandled_input(event: InputEvent) -> void:
 					current_action = selected_unit.actions[action_idx]
 
 				if current_action != null and current_action.targeting == ActionDef.TargetType.SELF:
-					selected_unit.set_pending_defend()
+					match current_action.effect:
+						ActionDef.Effect.DEFEND:
+							selected_unit.set_pending_defend()
 					_reset_action_state()
 					_update_selection_panel()
 				else:
 					var mouse_pos := get_global_mouse_position()
-					if selected_unit.heals:
+					var target_enemy := _enemy_at(mouse_pos)
+					if target_enemy != null:
+						if current_action != null and current_action.effect == ActionDef.Effect.TAUNT:
+							selected_unit.set_pending_taunt(target_enemy)
+						else:
+							selected_unit.set_pending_attack(target_enemy)
+						_overlay.queue_redraw()
+						_reset_action_state()
+						_update_selection_panel()
+					elif selected_unit.heals:
 						var target_ally := _ally_at(mouse_pos)
 						if target_ally != null:
 							selected_unit.set_pending_attack(target_ally)
-							_overlay.queue_redraw()
-							_reset_action_state()
-							_update_selection_panel()
-					else:
-						var target_enemy := _enemy_at(mouse_pos)
-						if target_enemy != null:
-							selected_unit.set_pending_attack(target_enemy)
 							_overlay.queue_redraw()
 							_reset_action_state()
 							_update_selection_panel()
@@ -315,8 +344,21 @@ func _on_enemy_died() -> void:
 
 
 func _on_action_selected(index: int) -> void:
-	_active_action_index = index
-	Input.set_default_cursor_shape(Input.CURSOR_CROSS)
+	if selected_unit == null:
+		return
+	var current_action: ActionDef = null
+	if selected_unit.actions.size() > index:
+		current_action = selected_unit.actions[index]
+	if current_action != null and current_action.targeting == ActionDef.TargetType.SELF:
+		match current_action.effect:
+			ActionDef.Effect.DEFEND:
+				selected_unit.set_pending_defend()
+		_overlay.queue_redraw()
+		_reset_action_state()
+		_update_selection_panel()
+	else:
+		_active_action_index = index
+		Input.set_default_cursor_shape(Input.CURSOR_CROSS)
 
 
 func _reset_action_state() -> void:

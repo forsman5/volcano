@@ -27,6 +27,12 @@ func set_selected(selected: bool) -> void:
 
 
 func pick_target() -> void:
+	for s in _status_effects:
+		if s is TauntEffect:
+			var te := s as TauntEffect
+			if is_instance_valid(te.taunter):
+				set_pending_attack(te.taunter)
+				return
 	var nearest := _nearest_hero()
 	if nearest == null:
 		return

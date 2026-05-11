@@ -32,7 +32,10 @@ func refresh(unit: BaseUnit) -> void:
 	_health_bar.value = unit.health
 	_health_lbl.text = "%d / %d" % [int(unit.health), int(unit.max_health)]
 
-	if unit._pending_defend:
+	if unit._pending_taunt:
+		var target_name := (unit._pending_attack_target as BaseUnit).unit_name if is_instance_valid(unit._pending_attack_target) else "?"
+		_action_lbl.text = "Taunting %s" % target_name
+	elif unit._pending_defend:
 		_action_lbl.text = "Defending +%d" % int(unit._defend_bonus)
 	elif not unit._has_pending_attack or not is_instance_valid(unit._pending_attack_target):
 		_action_lbl.text = "None"
