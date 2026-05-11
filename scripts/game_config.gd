@@ -22,7 +22,6 @@ var ally_count: int = 2
 var enemy_count: int = 2
 var show_health_bars: bool = true
 var show_combat_text: bool = true
-var budget_ticks: int = 120
 var unit_weapons: Array[int] = []
 
 

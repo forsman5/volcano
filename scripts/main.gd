@@ -13,14 +13,10 @@ const ENEMY_TEXTURES = [
 	preload("res://assets/enemy2.png"),
 ]
 
-enum TurnPhase { PLANNING, EXECUTING }
-
 var selected_unit: PlayerUnit = null
 var _enemies_remaining: int = 0
-var _turn_phase := TurnPhase.PLANNING
 var _player_units: Array[PlayerUnit] = []
 var _enemy_units: Array[EnemyUnit] = []
-var _exec_frames: int = 0
 var _overlay: Node2D
 
 var _sel_panel: SelectionPanel
@@ -124,14 +120,6 @@ func _spread_positions(count: int, x: float) -> Array:
 	return positions
 
 
-func _physics_process(_delta: float) -> void:
-	if _turn_phase != TurnPhase.EXECUTING or get_tree().paused:
-		return
-	_exec_frames += 1
-	if _exec_frames >= GameConfig.budget_ticks:
-		_end_execution()
-
-
 func _draw() -> void:
 	for child in get_children():
 		if child is StaticBody2D:
@@ -142,8 +130,6 @@ func _draw() -> void:
 
 
 func _on_overlay_draw() -> void:
-	if _turn_phase != TurnPhase.PLANNING:
-		return
 	for unit in _player_units:
 		if not is_instance_valid(unit):
 			continue
@@ -179,7 +165,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
 		var mb := event as InputEventMouseButton
 		if mb.button_index == MOUSE_BUTTON_RIGHT and mb.pressed:
-			if selected_unit != null and _turn_phase == TurnPhase.PLANNING:
+			if selected_unit != null:
 				var action_idx := _active_action_index if _active_action_index >= 0 else 0
 				var current_action: ActionDef = null
 				if selected_unit.actions.size() > action_idx:
@@ -220,38 +206,40 @@ func _on_end_turn() -> void:
 
 
 func _begin_execution() -> void:
-	_turn_phase = TurnPhase.EXECUTING
-	_exec_frames = 0
-	_end_turn_btn.disabled = true
 	_overlay.queue_redraw()
 	_reset_action_state()
 	_update_selection_panel()
 
 	for unit in _player_units:
 		unit.begin_execution()
+	for enemy in _enemy_units:
+		if is_instance_valid(enemy):
+			enemy.begin_execution()
+
+	for unit in _player_units:
+		unit.execute_attack()
+	for enemy in _enemy_units:
+		if is_instance_valid(enemy):
+			enemy.execute_attack()
+
+	for unit in _player_units:
 		if not unit.is_melee and unit._has_pending_attack and is_instance_valid(unit._pending_attack_target):
 			var proj := Projectile.new()
 			proj.global_position = unit.global_position
 			proj.target_unit = unit._pending_attack_target
-			proj.damage = unit.attack_damage
 			proj.heals = unit.heals
 			add_child(proj)
-
 	for enemy in _enemy_units:
-		if not is_instance_valid(enemy):
-			continue
-		enemy.begin_execution()
-		if not enemy.is_melee and enemy._has_pending_attack and is_instance_valid(enemy._pending_attack_target):
+		if is_instance_valid(enemy) and not enemy.is_melee and enemy._has_pending_attack and is_instance_valid(enemy._pending_attack_target):
 			var proj := Projectile.new()
 			proj.global_position = enemy.global_position
 			proj.target_unit = enemy._pending_attack_target
-			proj.damage = enemy.attack_damage
 			add_child(proj)
+
+	_end_execution()
 
 
 func _end_execution() -> void:
-	_turn_phase = TurnPhase.PLANNING
-	_end_turn_btn.disabled = false
 	for unit in _player_units:
 		unit.end_execution()
 	for enemy in _enemy_units:

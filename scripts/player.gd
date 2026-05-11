@@ -15,10 +15,6 @@ func _ready() -> void:
 	_area.input_event.connect(_on_area_input_event)
 
 
-func _physics_process(_delta: float) -> void:
-	_try_melee_attack()
-
-
 func set_selected(selected: bool) -> void:
 	_sprite.modulate = Color(0.4, 1.0, 0.4) if selected else Color.WHITE
 

@@ -18,14 +18,7 @@ func _ready() -> void:
 		_sprite.texture = unit_texture
 
 
-func _physics_process(_delta: float) -> void:
-	if not _is_executing:
-		return
-	_try_melee_attack()
-
-
 func begin_execution() -> void:
-	_is_executing = true
 	var nearest := _nearest_hero()
 	if nearest == null:
 		return
@@ -36,7 +29,6 @@ func end_execution() -> void:
 	super.end_execution()
 	_has_pending_attack = false
 	_pending_attack_target = null
-	_is_executing = false
 
 
 func _nearest_hero() -> Node2D:

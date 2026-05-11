@@ -21,7 +21,7 @@ var _pending_defend: bool = false
 var _defend_bonus: float = 0.0
 var _has_pending_attack: bool = false
 var _has_attacked: bool = false
-var _is_executing: bool = false
+var _health_before_defend: float = 0.0
 
 var _health_bar: HealthBar = null
 
@@ -58,8 +58,8 @@ func ready_for_end_turn() -> Array[String]:
 
 
 func begin_execution() -> void:
-	_is_executing = true
 	if _pending_defend:
+		_health_before_defend = health
 		health += _defend_bonus
 		if _health_bar:
 			_health_bar.setup(health, max_health)
@@ -67,10 +67,11 @@ func begin_execution() -> void:
 
 func end_execution() -> void:
 	_has_attacked = false
-	_is_executing = false
 	if _pending_defend:
 		_pending_defend = false
-		health = maxf(1.0, health - _defend_bonus)
+		var damage_taken := (_health_before_defend + _defend_bonus) - health
+		var unabsorbed := maxf(0.0, damage_taken - _defend_bonus)
+		health = maxf(1.0, _health_before_defend - unabsorbed)
 		_defend_bonus = 0.0
 		if _health_bar:
 			_health_bar.setup(health, max_health)
@@ -78,13 +79,15 @@ func end_execution() -> void:
 		_has_pending_attack = false
 
 
-func _try_melee_attack() -> void:
-	if not is_melee or _has_attacked or not _has_pending_attack or not _is_executing:
+func execute_attack() -> void:
+	if _pending_defend or not _has_pending_attack:
 		return
 	if not is_instance_valid(_pending_attack_target):
 		return
-	_pending_attack_target.take_damage(attack_damage)
-	_has_attacked = true
+	if heals:
+		_pending_attack_target.heal(attack_damage)
+	else:
+		_pending_attack_target.take_damage(attack_damage)
 
 
 func heal(amount: float) -> void:
