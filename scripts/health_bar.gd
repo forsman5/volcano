@@ -8,7 +8,7 @@ var _ratio: float = 1.0
 
 
 func setup(current: float, maximum: float) -> void:
-	_ratio = current / maximum if maximum > 0.0 else 0.0
+	_ratio = clampf(current / maximum, 0.0, 1.0) if maximum > 0.0 else 0.0
 	queue_redraw()
 
 

@@ -24,6 +24,7 @@ var _exec_frames: int = 0
 var _overlay: Node2D
 
 var _sel_panel: SelectionPanel
+var _active_action_index: int = -1
 
 @onready var _end_turn_btn: Button = $HUDLayer/EndTurnButton
 @onready var _confirm_panel: CanvasLayer = $ConfirmPanel
@@ -39,6 +40,7 @@ func _ready() -> void:
 	_overlay.draw.connect(_on_overlay_draw)
 	_sel_panel = SELECTION_PANEL_SCENE.instantiate()
 	$HUDLayer.add_child(_sel_panel)
+	_sel_panel.action_selected.connect(_on_action_selected)
 	$PauseMenu/PanelCenter/VBoxContainer/ResumeButton.pressed.connect(_toggle_pause)
 	$PauseMenu/PanelCenter/VBoxContainer/MenuButton.pressed.connect(_go_to_menu)
 	$PauseMenu/PanelCenter/VBoxContainer/MenuSaveButton.pressed.connect(_go_to_menu_save)
@@ -51,10 +53,18 @@ func _spawn_units() -> void:
 	if GameConfig.unit_weapons.is_empty():
 		GameConfig.reset_unit_weapons()
 
+	var use_weapon := ActionDef.new()
+	use_weapon.name = "Use Weapon"
+
+	var defend := ActionDef.new()
+	defend.name = "Defend"
+	defend.targeting = ActionDef.TargetType.SELF
+
 	var player := UNIT_SCENE.instantiate() as PlayerUnit
 	player.position = Vector2(200, 324)
 	player.unit_texture = PLAYER_TEXTURE
 	player.unit_name = "Player"
+	player.actions = [use_weapon, defend]
 	var pw: Dictionary = WeaponData.WEAPONS[GameConfig.unit_weapons[0]]
 	player.is_melee = pw["is_melee"]
 	player.attack_range = pw["attack_range"]
@@ -71,6 +81,7 @@ func _spawn_units() -> void:
 		ally.position = ally_positions[i]
 		ally.unit_texture = _pick_texture("ally", i, ALLY_TEXTURES)
 		ally.unit_name = "Ally %d" % (i + 1)
+		ally.actions = [use_weapon, defend]
 		var aw: Dictionary = WeaponData.WEAPONS[GameConfig.unit_weapons[i + 1]]
 		ally.is_melee = aw["is_melee"]
 		ally.attack_range = aw["attack_range"]
@@ -169,19 +180,31 @@ func _unhandled_input(event: InputEvent) -> void:
 		var mb := event as InputEventMouseButton
 		if mb.button_index == MOUSE_BUTTON_RIGHT and mb.pressed:
 			if selected_unit != null and _turn_phase == TurnPhase.PLANNING:
-				var mouse_pos := get_global_mouse_position()
-				if selected_unit.heals:
-					var target_ally := _ally_at(mouse_pos)
-					if target_ally != null:
-						selected_unit.set_pending_attack(target_ally)
-						_overlay.queue_redraw()
-						_update_selection_panel()
+				var action_idx := _active_action_index if _active_action_index >= 0 else 0
+				var current_action: ActionDef = null
+				if selected_unit.actions.size() > action_idx:
+					current_action = selected_unit.actions[action_idx]
+
+				if current_action != null and current_action.targeting == ActionDef.TargetType.SELF:
+					selected_unit.set_pending_defend()
+					_reset_action_state()
+					_update_selection_panel()
 				else:
-					var target_enemy := _enemy_at(mouse_pos)
-					if target_enemy != null:
-						selected_unit.set_pending_attack(target_enemy)
-						_overlay.queue_redraw()
-						_update_selection_panel()
+					var mouse_pos := get_global_mouse_position()
+					if selected_unit.heals:
+						var target_ally := _ally_at(mouse_pos)
+						if target_ally != null:
+							selected_unit.set_pending_attack(target_ally)
+							_overlay.queue_redraw()
+							_reset_action_state()
+							_update_selection_panel()
+					else:
+						var target_enemy := _enemy_at(mouse_pos)
+						if target_enemy != null:
+							selected_unit.set_pending_attack(target_enemy)
+							_overlay.queue_redraw()
+							_reset_action_state()
+							_update_selection_panel()
 
 
 func _on_end_turn() -> void:
@@ -201,6 +224,7 @@ func _begin_execution() -> void:
 	_exec_frames = 0
 	_end_turn_btn.disabled = true
 	_overlay.queue_redraw()
+	_reset_action_state()
 	_update_selection_panel()
 
 	for unit in _player_units:
@@ -270,6 +294,7 @@ func _go_to_menu_save() -> void:
 func _on_unit_clicked(unit: PlayerUnit) -> void:
 	if selected_unit != null and selected_unit != unit:
 		selected_unit.set_selected(false)
+		_reset_action_state()
 	selected_unit = unit
 	selected_unit.set_selected(true)
 	_overlay.queue_redraw()
@@ -282,6 +307,17 @@ func _on_enemy_died() -> void:
 		$WinScreen.visible = true
 		$WinScreen/CenterContainer/VBoxContainer/MenuButton.pressed.connect(_go_to_menu)
 		$WinScreen/CenterContainer/VBoxContainer/MenuSaveButton.pressed.connect(_go_to_menu_save)
+
+
+func _on_action_selected(index: int) -> void:
+	_active_action_index = index
+	Input.set_default_cursor_shape(Input.CURSOR_CROSS)
+
+
+func _reset_action_state() -> void:
+	_active_action_index = -1
+	Input.set_default_cursor_shape(Input.CURSOR_ARROW)
+	_sel_panel.deselect_action_buttons()
 
 
 func _update_selection_panel() -> void:

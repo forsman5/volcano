@@ -14,8 +14,11 @@ var _is_dead: bool = false
 
 var heals: bool = false
 var unit_name: String = ""
+var actions: Array[ActionDef] = []
 
 var _pending_attack_target: Node2D = null
+var _pending_defend: bool = false
+var _defend_bonus: float = 0.0
 var _has_pending_attack: bool = false
 var _has_attacked: bool = false
 var _is_executing: bool = false
@@ -34,7 +37,16 @@ func _ready() -> void:
 
 
 func set_pending_attack(target: Node2D) -> void:
+	_pending_defend = false
+	_defend_bonus = 0.0
 	_pending_attack_target = target
+	_has_pending_attack = true
+
+
+func set_pending_defend() -> void:
+	_pending_attack_target = null
+	_pending_defend = true
+	_defend_bonus = 20.0
 	_has_pending_attack = true
 
 
@@ -47,11 +59,21 @@ func ready_for_end_turn() -> Array[String]:
 
 func begin_execution() -> void:
 	_is_executing = true
+	if _pending_defend:
+		health += _defend_bonus
+		if _health_bar:
+			_health_bar.setup(health, max_health)
 
 
 func end_execution() -> void:
 	_has_attacked = false
 	_is_executing = false
+	if _pending_defend:
+		_pending_defend = false
+		health = maxf(1.0, health - _defend_bonus)
+		_defend_bonus = 0.0
+		if _health_bar:
+			_health_bar.setup(health, max_health)
 	if not is_instance_valid(_pending_attack_target):
 		_has_pending_attack = false
 

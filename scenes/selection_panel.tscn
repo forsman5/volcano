@@ -9,7 +9,7 @@ anchor_right = 0.0
 anchor_bottom = 1.0
 offset_left = 8.0
 offset_top = -120.0
-offset_right = 248.0
+offset_right = 360.0
 offset_bottom = -8.0
 mouse_filter = 2
 visible = false
@@ -53,3 +53,11 @@ theme_override_font_sizes/font_size = 13
 [node name="ActionLabel" type="Label" parent="Margin/HBox/Info"]
 mouse_filter = 2
 theme_override_font_sizes/font_size = 13
+
+[node name="VSeparator" type="VSeparator" parent="Margin/HBox"]
+mouse_filter = 2
+
+[node name="ActionButtons" type="VBoxContainer" parent="Margin/HBox"]
+custom_minimum_size = Vector2(96, 0)
+mouse_filter = 2
+theme_override_constants/separation = 4
